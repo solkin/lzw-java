@@ -37,9 +37,9 @@ public class Main {
 
             LZWInputStream lzwInputStream = new LZWInputStream(input);
             int read;
-            StringBuilder sb = new StringBuilder();
+            ByteArrayOutputStream sb = new ByteArrayOutputStream();
             while ((read = lzwInputStream.read()) != -1) {
-                sb.append((char) read);
+                sb.write(read);
             }
             System.out.println(sb.toString());
 

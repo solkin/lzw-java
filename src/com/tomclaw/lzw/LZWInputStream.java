@@ -10,14 +10,16 @@ import java.util.LinkedHashMap;
 public class LZWInputStream extends FilterInputStream {
 
     private HashMap<Integer, IntBuffer> dictionary = new LinkedHashMap<>();
-    private int currentChar = -1;
-    private IntBuffer oldPhrase = toBuffer(currentChar);
+    private int currentChar = 0;
+    private IntBuffer oldPhrase = null;
     private int code = 256;
     private IntBuffer phrase;
     private int currCode;
     private BitInputStream bis;
 
-    private ByteBuffer buffer = ByteBuffer.allocate(4);
+    private PipedInputStream pipedInputStream = new PipedInputStream();
+    private PipedOutputStream pipedOutputStream = new PipedOutputStream();
+    private DataOutputStream dataOutputStream = new DataOutputStream(pipedOutputStream);
 
     /**
      * Creates a <code>FilterInputStream</code>
@@ -35,19 +37,27 @@ public class LZWInputStream extends FilterInputStream {
 
     @Override
     public int read() throws IOException {
-        if (buffer.remaining() == 0) {
+        if (pipedInputStream.available() == 0) {
             try {
                 extractBuffer();
             } catch (EOFException ex) {
                 return -1;
             }
         }
-        return buffer.get();
+        return pipedInputStream.read();
     }
 
     private void extractBuffer() throws IOException {
         if ((currCode = readInt(bis)) == -1) {
             throw new EOFException("EOF");
+        }
+        if (oldPhrase == null) {
+            pipedOutputStream.connect(pipedInputStream);
+            currentChar = currCode;
+            oldPhrase = toBuffer(currentChar);
+            writeIntBuffer(dataOutputStream, oldPhrase);
+            oldPhrase.rewind();
+            return;
         }
         IntBuffer currIntBuffer = toBuffer(currCode);
         if (isByte(currCode)) {
@@ -60,7 +70,7 @@ public class LZWInputStream extends FilterInputStream {
             }
         }
 
-        writeIntBuffer(phrase);
+        writeIntBuffer(dataOutputStream, phrase);
 
         currentChar = phrase.get(0);
         currIntBuffer = toBuffer(currentChar);
@@ -71,26 +81,6 @@ public class LZWInputStream extends FilterInputStream {
         dictionary.put(code, oldPhraseWithCurrentChar);
         code++;
         oldPhrase = phrase;
-    }
-
-    private void writeIntBuffer(IntBuffer intBuffer) {
-        intBuffer.rewind();
-        for (int v : intBuffer.array()) {
-            if (isByte(v)) {
-                buffer.rewind();
-                buffer.put((byte) v);
-                buffer.limit(1);
-                buffer.rewind();
-            } else {
-                buffer.rewind();
-                buffer.put((byte) ((v >>> 24) & 0xFF));
-                buffer.put((byte) ((v >>> 16) & 0xFF));
-                buffer.put((byte) ((v >>> 8) & 0xFF));
-                buffer.put((byte) ((v >>> 0) & 0xFF));
-                buffer.limit(4);
-                buffer.rewind();
-            }
-        }
     }
 
     private void writeIntBuffer(DataOutputStream output, IntBuffer buffer) throws IOException {
@@ -130,5 +120,13 @@ public class LZWInputStream extends FilterInputStream {
 
     private IntBuffer toBuffer(int value) {
         return IntBuffer.allocate(1).put(value).rewind();
+    }
+
+    @Override
+    public void close() throws IOException {
+        super.close();
+        pipedInputStream.close();
+        pipedOutputStream.close();
+        dataOutputStream.close();
     }
 }
