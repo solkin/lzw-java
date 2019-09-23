@@ -17,15 +17,12 @@ public class Main {
             byte[] data = Files.readAllBytes(in.toPath());
             System.out.println(data.length + " bytes, (original)");
 
-            Lzw lzw_compression = new Lzw();
-
             bytes.reset();
             LZWOutputStream lzw = new LZWOutputStream(bytes);
             lzw.write(data);
             lzw.flush();
             lzw.close();
             System.out.println(bytes.size() + " bytes (encoded)");
-            // HexUtil.dump_(bytes.toByteArray(), "encoded  ");
             File out = new File("/Users/solkin/Desktop/app-info.lzw");
             OutputStream fos = new FileOutputStream(out);
             fos.write(bytes.toByteArray());
@@ -42,22 +39,6 @@ public class Main {
                 sb.write(read);
             }
             System.out.println(sb.toString());
-
-//            lzw_compression.lzw_extract(new BitInputStream(input), new DataOutputStream(bytes));
-//            bytes.flush();
-//            // HexUtil.dump_(bytes.toByteArray(), "decoded  ");
-//            String decoded = new String(bytes.toByteArray());
-//            String original = new String(data);
-//            System.out.println(bytes.size() + " bytes, (decoded)  " + decoded);
-//            System.out.println(data.length + " bytes, (original) " + original);
-//            System.out.println(decoded.equals(original) ? "passed" : "failed");
-//            bytes.reset();
-//
-//            OutputStream gzip = new GZIPOutputStream(bytes);
-//            gzip.write(OriginalString.getBytes(StandardCharsets.UTF_8));
-//            gzip.flush();
-//            gzip.close();
-//            System.out.println(bytes.size() + " bytes");
         } catch (IOException e) {
             e.printStackTrace();
         }
