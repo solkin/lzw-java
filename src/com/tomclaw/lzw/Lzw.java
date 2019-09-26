@@ -1,28 +1,31 @@
 package com.tomclaw.lzw;
 
-import java.util.ArrayList;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 public class Lzw {
 
-    public String lzw_compress(String input) {
+    public long lzw_compress(InputStream input, DataOutputStream output) throws IOException {
         HashMap<String, Integer> dictionary = new LinkedHashMap<>();
-        String[] data = (input + "").split("");
-        String out = "";
-        ArrayList<Character> temp_out = new ArrayList<>();
+        int read;
         String currentChar;
-        String phrase = data[0];
+        String phrase = String.valueOf((char) input.read());
+        long count = 1;
         int code = 256;
-        for (int i = 1; i < data.length; i++) {
-            currentChar = data[i];
+        while ((read = input.read()) != -1) {
+            count++;
+            currentChar = String.valueOf((char) read);
             if (dictionary.get(phrase + currentChar) != null) {
                 phrase += currentChar;
             } else {
                 if (phrase.length() > 1) {
-                    temp_out.add((char) dictionary.get(phrase).intValue());
+                    writeChar((char) dictionary.get(phrase).intValue(), output);
                 } else {
-                    temp_out.add((char) Character.codePointAt(phrase, 0));
+                    writeChar((char) Character.codePointAt(phrase, 0), output);
                 }
 
                 dictionary.put(phrase + currentChar, code);
@@ -32,15 +35,12 @@ public class Lzw {
         }
 
         if (phrase.length() > 1) {
-            temp_out.add((char) dictionary.get(phrase).intValue());
+            writeChar((char) dictionary.get(phrase).intValue(), output);
         } else {
-            temp_out.add((char) Character.codePointAt(phrase, 0));
+            writeChar((char) Character.codePointAt(phrase, 0), output);
         }
 
-        for (char outchar : temp_out) {
-            out += outchar;
-        }
-        return out;
+        return count;
     }
 
     public String lzw_extract(String input) {
@@ -69,5 +69,18 @@ public class Lzw {
             oldPhrase = phrase;
         }
         return out;
+    }
+
+    private void writeChar(char c, OutputStream output) throws IOException {
+        if ((c >= 0x0001) && (c <= 0x007F)) {
+            output.write(c);
+        } else if (c > 0x07FF) {
+            output.write((byte) (0xE0 | ((c >> 12) & 0x0F)));
+            output.write((byte) (0x80 | ((c >>  6) & 0x3F)));
+            output.write((byte) (0x80 | ((c >>  0) & 0x3F)));
+        } else {
+            output.write((byte) (0xC0 | ((c >>  6) & 0x1F)));
+            output.write((byte) (0x80 | ((c >>  0) & 0x3F)));
+        }
     }
 }
