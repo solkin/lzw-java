@@ -15,11 +15,12 @@ public class Main {
             lzw_compression.lzw_compress(input, new DataOutputStream(bytes));
             bytes.flush();
             System.out.println(bytes.size() + " bytes, " + bytes.toString());
-            String decompressed = lzw_compression.lzw_extract(bytes.toString());
+            input.close();
+
+            input = new ByteArrayInputStream(bytes.toByteArray());
             bytes.reset();
-            DataOutputStream output = new DataOutputStream(bytes);
-            output.writeUTF(decompressed);
-            output.flush();
+            lzw_compression.lzw_extract(input, bytes);
+            bytes.flush();
             System.out.println(bytes.size() + " bytes, " + bytes.toString());
             bytes.reset();
 
