@@ -1,35 +1,55 @@
 package com.tomclaw.lzw;
 
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 public class Lzw {
 
-    public void lzw_extract(BitInputStream input, OutputStream output) throws IOException {
-        HashMap<Integer, String> dictionary = new LinkedHashMap<>();
-        char currentChar = (char) readInt(input);
-        String oldPhrase = String.valueOf(currentChar);
+    public void lzw_extract(BitInputStream input, DataOutputStream output) throws IOException {
+        HashMap<Integer, IntBuffer> dictionary = new LinkedHashMap<>();
+        int currentChar = readInt(input);
+        IntBuffer oldPhrase = toBuffer(currentChar);
         output.write(currentChar);
         int code = 256;
-        String phrase;
+        IntBuffer phrase;
         int currCode;
         while ((currCode = readInt(input)) != -1) {
-            if (currCode < 256) {
-                phrase = String.valueOf((char) currCode);
+            IntBuffer currIntBuffer = toBuffer(currCode);
+            if (isByte(currCode)) {
+                phrase = currIntBuffer;
             } else {
                 if (dictionary.get(currCode) != null) {
-                    phrase = dictionary.get(currCode);
+                    phrase = dictionary.get(currCode).rewind();
                 } else {
-                    phrase = oldPhrase + currentChar;
+                    oldPhrase.rewind();
+                    phrase = IntBuffer.allocate(oldPhrase.limit() + currIntBuffer.limit()).put(oldPhrase).put(currIntBuffer).rewind();
                 }
             }
-            output.write(phrase.getBytes(StandardCharsets.UTF_8));
-            currentChar = phrase.charAt(0);
-            dictionary.put(code, oldPhrase + currentChar);
+
+            writeIntBuffer(output, phrase);
+            phrase.rewind();
+
+            currentChar = phrase.get(0);
+            currIntBuffer = toBuffer(currentChar);
+            IntBuffer oldPhraseWithCurrentChar = IntBuffer.allocate(oldPhrase.limit() + currIntBuffer.limit()).put(oldPhrase).put(currIntBuffer).rewind();
+            dictionary.put(code, oldPhraseWithCurrentChar);
             code++;
             oldPhrase = phrase;
+        }
+    }
+
+    private void writeIntBuffer(DataOutputStream output, IntBuffer buffer) throws IOException {
+        buffer.rewind();
+        for (int value : buffer.array()) {
+            if (isByte(value)) {
+                output.write(value);
+            } else {
+                output.writeInt(value);
+            }
         }
     }
 
@@ -45,8 +65,19 @@ public class Lzw {
         StringBuilder bin = new StringBuilder("1");
         for (int i = 0; i < c; i++) {
             bit = input.readBit();
+            if (bit == -1) {
+                throw new EOFException();
+            }
             bin.append(bit);
         }
-        return Integer.parseInt(bin.toString(), 2) - 1;
+        return (int) Long.parseLong(bin.toString(), 2) - 1;
+    }
+
+    private boolean isByte(int value) {
+        return value == (byte) value;
+    }
+
+    private IntBuffer toBuffer(int value) {
+        return IntBuffer.allocate(1).put(value).rewind();
     }
 }

@@ -3,13 +3,14 @@ package com.tomclaw.lzw;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
 public class LZWOutputStream extends FilterOutputStream {
 
-    private HashMap<String, Integer> dictionary = new LinkedHashMap<>();
-    private String phrase = null;
+    private HashMap<ByteBuffer, Integer> dictionary = new LinkedHashMap<>();
+    private ByteBuffer phrase = null;
     private int code = 256;
     private boolean isFlushed = false;
 
@@ -40,21 +41,22 @@ public class LZWOutputStream extends FilterOutputStream {
      */
     @Override
     public void write(int b) throws IOException {
-        char ch = (char) Byte.toUnsignedInt((byte) b);
         if (phrase == null) {
-            phrase = String.valueOf(ch);
+            phrase = ByteBuffer.allocate(1).put((byte) b).rewind();
             return;
         }
-        String currentChar = String.valueOf(ch);
-        if (dictionary.get(phrase + currentChar) != null) {
-            phrase += currentChar;
+        phrase.rewind();
+        ByteBuffer currentChar = ByteBuffer.allocate(1).put((byte) b).rewind();
+        ByteBuffer phraseWithCurrentChar = ByteBuffer.allocate(phrase.limit() + currentChar.limit()).put(phrase).put(currentChar).rewind();
+        if (dictionary.get(phraseWithCurrentChar) != null) {
+            phrase = phraseWithCurrentChar;
         } else {
-            if (phrase.length() > 1) {
-                writeInt(dictionary.get(phrase));
+            if (phrase.limit() > 1) {
+                writeInt(dictionary.get(phrase.rewind()));
             } else {
-                writeInt(Character.codePointAt(phrase, 0));
+                writeInt(phrase.get(0));
             }
-            dictionary.put(phrase + currentChar, code);
+            dictionary.put(phraseWithCurrentChar.rewind(), code);
             code++;
             phrase = currentChar;
         }
@@ -77,24 +79,21 @@ public class LZWOutputStream extends FilterOutputStream {
     @Override
     public void flush() throws IOException {
         if (!isFlushed) {
-            if (phrase.length() > 1) {
+            if (phrase.limit() > 1) {
                 writeInt(dictionary.get(phrase));
             } else {
-                writeInt(Character.codePointAt(phrase, 0));
+                writeInt(phrase.get(0));
             }
         }
         isFlushed = true;
-
-        out.write(digits);
-        digits = 0;
-        numDigits = 0;
         super.flush();
     }
 
     @Override
     public void close() throws IOException {
+        flush();
         if (numDigits > 0) {
-            flush();
+            flushBits();
         }
         out.close();
     }
@@ -117,7 +116,13 @@ public class LZWOutputStream extends FilterOutputStream {
         digits += bit << numDigits;
         numDigits++;
         if (numDigits == BYTE_SIZE) {
-            flush();
+            flushBits();
         }
+    }
+
+    private void flushBits() throws IOException {
+        out.write(digits);
+        digits = 0;
+        numDigits = 0;
     }
 }
