@@ -98,7 +98,7 @@ public class LZWOutputStream extends FilterOutputStream {
         out.close();
     }
 
-    public void writeInt(int value) throws IOException {
+    private void writeInt(int value) throws IOException {
         String bin = Integer.toBinaryString(value + 1);
         int c = bin.length() - 1;
         for (int i = 0; i < c; i++) {
@@ -109,7 +109,7 @@ public class LZWOutputStream extends FilterOutputStream {
         }
     }
 
-    public void writeBit(int bit) throws IOException {
+    private void writeBit(int bit) throws IOException {
         if (bit < 0 || bit > 1) {
             throw new IllegalArgumentException("Illegal bit: " + bit);
         }
