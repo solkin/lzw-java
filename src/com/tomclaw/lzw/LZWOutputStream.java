@@ -13,6 +13,11 @@ public class LZWOutputStream extends FilterOutputStream {
     private int code = 256;
     private boolean isFlushed = false;
 
+    private int digits;
+    private int numDigits;
+
+    private static final int BYTE_SIZE = 8;
+
     /**
      * Creates an output stream filter built on top of the specified
      * underlying output stream.
@@ -45,9 +50,9 @@ public class LZWOutputStream extends FilterOutputStream {
             phrase += currentChar;
         } else {
             if (phrase.length() > 1) {
-                writeChar((char) dictionary.get(phrase).intValue());
+                writeInt(dictionary.get(phrase));
             } else {
-                writeChar((char) Character.codePointAt(phrase, 0));
+                writeInt(Character.codePointAt(phrase, 0));
             }
             dictionary.put(phrase + currentChar, code);
             code++;
@@ -73,25 +78,46 @@ public class LZWOutputStream extends FilterOutputStream {
     public void flush() throws IOException {
         if (!isFlushed) {
             if (phrase.length() > 1) {
-                writeChar((char) dictionary.get(phrase).intValue());
+                writeInt(dictionary.get(phrase));
             } else {
-                writeChar((char) Character.codePointAt(phrase, 0));
+                writeInt(Character.codePointAt(phrase, 0));
             }
         }
         isFlushed = true;
+
+        out.write(digits);
+        digits = 0;
+        numDigits = 0;
         super.flush();
     }
 
-    private void writeChar(char c) throws IOException {
-        if ((c >= 0x0001) && (c <= 0x007F)) {
-            out.write((byte) c);
-        } else if (c > 0x07FF) {
-            out.write((byte) (0xE0 | ((c >> 12) & 0x0F)));
-            out.write((byte) (0x80 | ((c >> 6) & 0x3F)));
-            out.write((byte) (0x80 | ((c >> 0) & 0x3F)));
-        } else {
-            out.write((byte) (0xC0 | ((c >> 6) & 0x1F)));
-            out.write((byte) (0x80 | ((c >> 0) & 0x3F)));
+    @Override
+    public void close() throws IOException {
+        if (numDigits > 0) {
+            flush();
+        }
+        out.close();
+    }
+
+    public void writeInt(int value) throws IOException {
+        String bin = Integer.toBinaryString(value + 1);
+        int c = bin.length() - 1;
+        for (int i = 0; i < c; i++) {
+            writeBit(0);
+        }
+        for (int i = 0; i <= c; i++) {
+            writeBit(bin.charAt(i) == '1' ? 1 : 0);
+        }
+    }
+
+    public void writeBit(int bit) throws IOException {
+        if (bit < 0 || bit > 1) {
+            throw new IllegalArgumentException("Illegal bit: " + bit);
+        }
+        digits += bit << numDigits;
+        numDigits++;
+        if (numDigits == BYTE_SIZE) {
+            flush();
         }
     }
 }
