@@ -1,9 +1,9 @@
 package com.tomclaw.lzw;
 
-import java.io.*;
-import java.nio.ByteBuffer;
+import java.io.DataOutputStream;
+import java.io.EOFException;
+import java.io.IOException;
 import java.nio.IntBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -25,17 +25,18 @@ public class Lzw {
                 if (dictionary.get(currCode) != null) {
                     phrase = dictionary.get(currCode).rewind();
                 } else {
-                    oldPhrase.rewind();
-                    phrase = IntBuffer.allocate(oldPhrase.limit() + currIntBuffer.limit()).put(oldPhrase).put(currIntBuffer).rewind();
+                    phrase = IntBuffer.allocate(oldPhrase.limit() + 1).put(oldPhrase.rewind()).put(currentChar).rewind();
                 }
             }
 
             writeIntBuffer(output, phrase);
-            phrase.rewind();
 
             currentChar = phrase.get(0);
             currIntBuffer = toBuffer(currentChar);
-            IntBuffer oldPhraseWithCurrentChar = IntBuffer.allocate(oldPhrase.limit() + currIntBuffer.limit()).put(oldPhrase).put(currIntBuffer).rewind();
+            IntBuffer oldPhraseWithCurrentChar = IntBuffer.allocate(oldPhrase.limit() + currIntBuffer.limit())
+                    .put(oldPhrase.rewind())
+                    .put(currIntBuffer)
+                    .rewind();
             dictionary.put(code, oldPhraseWithCurrentChar);
             code++;
             oldPhrase = phrase;

@@ -13,7 +13,7 @@ public class Main {
             ByteArrayInputStream input;
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 
-            File in = new File("/Users/solkin/Desktop/apps-list-min.json");
+            File in = new File("/Users/solkin/Desktop/app-info.json");
             byte[] data = Files.readAllBytes(in.toPath());
             System.out.println(data.length + " bytes, (original)");
 
@@ -26,7 +26,7 @@ public class Main {
             lzw.close();
             System.out.println(bytes.size() + " bytes (encoded)");
             // HexUtil.dump_(bytes.toByteArray(), "encoded  ");
-            File out = new File("/Users/solkin/Desktop/apps-list-min.lzw");
+            File out = new File("/Users/solkin/Desktop/app-info.lzw");
             OutputStream fos = new FileOutputStream(out);
             fos.write(bytes.toByteArray());
             fos.flush();
@@ -37,8 +37,8 @@ public class Main {
             lzw_compression.lzw_extract(new BitInputStream(input), new DataOutputStream(bytes));
             bytes.flush();
             // HexUtil.dump_(bytes.toByteArray(), "decoded  ");
-            String decoded = HexUtil.bytesToString(bytes.toByteArray());
-            String original = HexUtil.bytesToString(data);
+            String decoded = new String(bytes.toByteArray());
+            String original = new String(data);
             System.out.println(bytes.size() + " bytes, (decoded)  " + decoded);
             System.out.println(data.length + " bytes, (original) " + original);
             System.out.println(decoded.equals(original) ? "passed" : "failed");
