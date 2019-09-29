@@ -34,15 +34,24 @@ public class Main {
 
             input = new ByteArrayInputStream(bytes.toByteArray());
             bytes.reset();
-            lzw_compression.lzw_extract(new BitInputStream(input), new DataOutputStream(bytes));
-            bytes.flush();
-            // HexUtil.dump_(bytes.toByteArray(), "decoded  ");
-            String decoded = new String(bytes.toByteArray());
-            String original = new String(data);
-            System.out.println(bytes.size() + " bytes, (decoded)  " + decoded);
-            System.out.println(data.length + " bytes, (original) " + original);
-            System.out.println(decoded.equals(original) ? "passed" : "failed");
-            bytes.reset();
+
+            LZWInputStream lzwInputStream = new LZWInputStream(input);
+            int read;
+            StringBuilder sb = new StringBuilder();
+            while ((read = lzwInputStream.read()) != -1) {
+                sb.append((char) read);
+            }
+            System.out.println(sb.toString());
+
+//            lzw_compression.lzw_extract(new BitInputStream(input), new DataOutputStream(bytes));
+//            bytes.flush();
+//            // HexUtil.dump_(bytes.toByteArray(), "decoded  ");
+//            String decoded = new String(bytes.toByteArray());
+//            String original = new String(data);
+//            System.out.println(bytes.size() + " bytes, (decoded)  " + decoded);
+//            System.out.println(data.length + " bytes, (original) " + original);
+//            System.out.println(decoded.equals(original) ? "passed" : "failed");
+//            bytes.reset();
 //
 //            OutputStream gzip = new GZIPOutputStream(bytes);
 //            gzip.write(OriginalString.getBytes(StandardCharsets.UTF_8));
