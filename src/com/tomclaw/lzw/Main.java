@@ -35,7 +35,7 @@ public class Main {
             while ((read = lzwInputStream.read()) != -1) {
                 sb.write(read);
             }
-            System.out.println(sb.toString());
+            System.out.println(sb.size() + " bytes, (decoded)");
         } catch (IOException e) {
             e.printStackTrace();
         }
