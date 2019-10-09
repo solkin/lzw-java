@@ -1,9 +1,9 @@
 package com.tomclaw.lzw;
 
 import java.io.*;
-import java.nio.file.Files;
 
 import static com.tomclaw.lzw.StreamHelper.closeStream;
+import static com.tomclaw.lzw.StreamHelper.copy;
 
 public class Main {
 
@@ -21,10 +21,7 @@ public class Main {
                         decInputStream = new BufferedInputStream(new FileInputStream(source));
                         encOutputStream = new BufferedOutputStream(new FileOutputStream(destination));
                         lzwOutputStream = new LZWOutputStream(encOutputStream);
-                        int read;
-                        while ((read = decInputStream.read()) != -1) {
-                            lzwOutputStream.write(read);
-                        }
+                        copy(decInputStream, lzwOutputStream);
                     } finally {
                         closeStream(lzwOutputStream);
                         closeStream(decInputStream);
@@ -39,17 +36,12 @@ public class Main {
                         encInputStream = new BufferedInputStream(new FileInputStream(source));
                         decOutputStream = new BufferedOutputStream(new FileOutputStream(destination));
                         lzwInputStream = new LZWInputStream(encInputStream);
-                        int read;
-                        while ((read = lzwInputStream.read()) != -1) {
-                            decOutputStream.write(read);
-                        }
-                        decOutputStream.flush();
+                        copy(lzwInputStream, decOutputStream);
                     } finally {
                         closeStream(lzwInputStream);
                         closeStream(encInputStream);
                         closeStream(decOutputStream);
                     }
-                    return;
             }
         } catch (Throwable throwable) {
             throwable.printStackTrace();

@@ -2,6 +2,8 @@ package com.tomclaw.lzw;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 public class StreamHelper {
 
@@ -14,5 +16,13 @@ public class StreamHelper {
                 }
             }
         }
+    }
+
+    public static void copy(InputStream input, OutputStream output) throws IOException {
+        int read;
+        while ((read = input.read()) != -1) {
+            output.write(read);
+        }
+        output.flush();
     }
 }
