@@ -23,9 +23,7 @@ public class Main {
                         lzwOutputStream = new LZWOutputStream(encOutputStream);
                         copy(decInputStream, lzwOutputStream);
                     } finally {
-                        closeStream(lzwOutputStream);
-                        closeStream(decInputStream);
-                        closeStream(encOutputStream);
+                        closeStream(lzwOutputStream, decInputStream, encOutputStream);
                     }
                     return;
                 case "-x":
@@ -38,9 +36,7 @@ public class Main {
                         lzwInputStream = new LZWInputStream(encInputStream);
                         copy(lzwInputStream, decOutputStream);
                     } finally {
-                        closeStream(lzwInputStream);
-                        closeStream(encInputStream);
-                        closeStream(decOutputStream);
+                        closeStream(lzwInputStream, encInputStream, decOutputStream);
                     }
             }
         } catch (Throwable throwable) {
