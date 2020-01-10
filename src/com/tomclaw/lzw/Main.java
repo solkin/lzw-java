@@ -7,7 +7,7 @@ import static com.tomclaw.lzw.StreamHelper.copy;
 
 public class Main {
 
-    private static String HELP = "First option must be a mode specifier:\n" +
+    private static final String HELP = "First option must be a mode specifier:\n" +
             "  -c Create  -x Extract\n" +
             "Create: bzz -c <file> | <archive>\n" +
             "  <file>  add these item to archive\n" +
