@@ -1,9 +1,7 @@
 package com.tomclaw.lzw;
 
 import java.io.*;
-import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
