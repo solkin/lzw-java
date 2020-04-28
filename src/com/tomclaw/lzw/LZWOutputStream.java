@@ -4,6 +4,7 @@ import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
@@ -42,12 +43,12 @@ public class LZWOutputStream extends FilterOutputStream {
     @Override
     public void write(int b) throws IOException {
         if (phrase == null) {
-            phrase = ByteBuffer.allocate(1).put((byte) b).rewind();
+            phrase = (ByteBuffer) ByteBuffer.allocate(1).put((byte) b).rewind();
             return;
         }
         phrase.rewind();
-        ByteBuffer currentChar = ByteBuffer.allocate(1).put((byte) b).rewind();
-        ByteBuffer phraseWithCurrentChar = ByteBuffer.allocate(phrase.limit() + currentChar.limit()).put(phrase).put(currentChar).rewind();
+        ByteBuffer currentChar = (ByteBuffer) ByteBuffer.allocate(1).put((byte) b).rewind();
+        ByteBuffer phraseWithCurrentChar = (ByteBuffer) ByteBuffer.allocate(phrase.limit() + currentChar.limit()).put(phrase).put(currentChar).rewind();
         if (dictionary.get(phraseWithCurrentChar) != null) {
             phrase = phraseWithCurrentChar;
         } else {
@@ -56,7 +57,7 @@ public class LZWOutputStream extends FilterOutputStream {
             } else {
                 writeInt(phrase.get(0));
             }
-            dictionary.put(phraseWithCurrentChar.rewind(), code);
+            dictionary.put((ByteBuffer) phraseWithCurrentChar.rewind(), code);
             code++;
             phrase = currentChar;
         }

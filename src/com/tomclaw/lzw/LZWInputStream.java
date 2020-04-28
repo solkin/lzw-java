@@ -62,9 +62,9 @@ public class LZWInputStream extends FilterInputStream {
             phrase = currIntBuffer;
         } else {
             if (dictionary.get(currCode) != null) {
-                phrase = dictionary.get(currCode).rewind();
+                phrase = (IntBuffer) dictionary.get(currCode).rewind();
             } else {
-                phrase = IntBuffer.allocate(oldPhrase.limit() + 1).put(oldPhrase.rewind()).put(currentChar).rewind();
+                phrase = (IntBuffer) IntBuffer.allocate(oldPhrase.limit() + 1).put((IntBuffer) oldPhrase.rewind()).put(currentChar).rewind();
             }
         }
 
@@ -72,8 +72,8 @@ public class LZWInputStream extends FilterInputStream {
 
         currentChar = phrase.get(0);
         currIntBuffer = toBuffer(currentChar);
-        IntBuffer oldPhraseWithCurrentChar = IntBuffer.allocate(oldPhrase.limit() + currIntBuffer.limit())
-                .put(oldPhrase.rewind())
+        IntBuffer oldPhraseWithCurrentChar = (IntBuffer) IntBuffer.allocate(oldPhrase.limit() + currIntBuffer.limit())
+                .put((IntBuffer) oldPhrase.rewind())
                 .put(currIntBuffer)
                 .rewind();
         dictionary.put(code, oldPhraseWithCurrentChar);
@@ -117,7 +117,7 @@ public class LZWInputStream extends FilterInputStream {
     }
 
     private IntBuffer toBuffer(int value) {
-        return IntBuffer.allocate(1).put(value).rewind();
+        return (IntBuffer) IntBuffer.allocate(1).put(value).rewind();
     }
 
     @Override
