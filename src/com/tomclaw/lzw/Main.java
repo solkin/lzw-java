@@ -19,9 +19,18 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            String command = args[0];
-            String source = args[1];
-            String destination = args[2];
+            String command;
+            String source;
+            String destination;
+            if (args.length == 3) {
+                command = args[0];
+                source = args[1];
+                destination = args[2];
+            } else {
+                command = "-h";
+                source = "";
+                destination = "";
+            }
             switch (command) {
                 case "-c":
                     InputStream decInputStream = null;
