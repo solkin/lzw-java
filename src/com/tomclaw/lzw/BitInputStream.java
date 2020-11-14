@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 public class BitInputStream implements Closeable {
+
     private InputStream input;
     private int digits;
     private int numDigits;
