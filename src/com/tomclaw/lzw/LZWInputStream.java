@@ -7,17 +7,17 @@ import java.util.LinkedHashMap;
 
 public class LZWInputStream extends FilterInputStream {
 
-    private HashMap<Integer, IntBuffer> dictionary = new LinkedHashMap<>();
+    private final HashMap<Integer, IntBuffer> dictionary = new LinkedHashMap<>();
     private int currentChar = 0;
     private IntBuffer oldPhrase = null;
     private int code = 256;
     private IntBuffer phrase;
     private int currCode;
-    private BitInputStream bis;
+    private final BitInputStream bis;
 
-    private PipedInputStream pipedInputStream = new PipedInputStream();
-    private PipedOutputStream pipedOutputStream = new PipedOutputStream();
-    private DataOutputStream dataOutputStream = new DataOutputStream(pipedOutputStream);
+    private final PipedInputStream pipedInputStream = new PipedInputStream();
+    private final PipedOutputStream pipedOutputStream = new PipedOutputStream();
+    private final DataOutputStream dataOutputStream = new DataOutputStream(pipedOutputStream);
 
     /**
      * Creates a <code>FilterInputStream</code>
