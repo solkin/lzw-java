@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 
 public class LZWOutputStream extends FilterOutputStream {
 
-    private HashMap<ByteBuffer, Integer> dictionary = new LinkedHashMap<>();
+    private final HashMap<ByteBuffer, Integer> dictionary = new LinkedHashMap<>();
     private ByteBuffer phrase = null;
     private int code = 256;
     private boolean isFlushed = false;
