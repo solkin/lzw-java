@@ -16,8 +16,10 @@ public class LZWOutputStream extends FilterOutputStream {
 
     private int digits;
     private int numDigits;
+    private int codeWidth = 9; // Start with 9 bits (codes 256-511)
 
     private static final int BYTE_SIZE = 8;
+    private static final int MAX_CODE_WIDTH = 16;
 
     /**
      * Creates an output stream filter built on top of the specified
@@ -58,6 +60,10 @@ public class LZWOutputStream extends FilterOutputStream {
             }
             dictionary.put((ByteBuffer) phraseWithCurrentChar.rewind(), code);
             code++;
+            // Increase code width when reaching the limit of current width
+            if (code >= (1 << codeWidth) && codeWidth < MAX_CODE_WIDTH) {
+                codeWidth++;
+            }
             phrase = currentChar;
         }
         isFlushed = false;
@@ -99,13 +105,9 @@ public class LZWOutputStream extends FilterOutputStream {
     }
 
     private void writeInt(int value) throws IOException {
-        String bin = Integer.toBinaryString(value + 1);
-        int c = bin.length() - 1;
-        for (int i = 0; i < c; i++) {
-            writeBit(0);
-        }
-        for (int i = 0; i <= c; i++) {
-            writeBit(bin.charAt(i) == '1' ? 1 : 0);
+        // Write code with fixed width (variable-width coding)
+        for (int i = codeWidth - 1; i >= 0; i--) {
+            writeBit((value >> i) & 1);
         }
     }
 

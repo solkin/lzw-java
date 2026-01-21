@@ -14,6 +14,9 @@ public class LZWInputStream extends FilterInputStream {
     private IntBuffer phrase;
     private int currCode;
     private final BitInputStream bis;
+    private int codeWidth = 9; // Start with 9 bits (codes 256-511)
+
+    private static final int MAX_CODE_WIDTH = 16;
 
     private final PipedInputStream pipedInputStream = new PipedInputStream();
     private final PipedOutputStream pipedOutputStream = new PipedOutputStream();
@@ -78,6 +81,10 @@ public class LZWInputStream extends FilterInputStream {
                 .rewind();
         dictionary.put(code, oldPhraseWithCurrentChar);
         code++;
+        // Increase code width when reaching the limit of current width
+        if (code >= (1 << codeWidth) && codeWidth < MAX_CODE_WIDTH) {
+            codeWidth++;
+        }
         oldPhrase = phrase;
     }
 
@@ -93,23 +100,16 @@ public class LZWInputStream extends FilterInputStream {
     }
 
     private int readInt(BitInputStream input) throws IOException {
-        int c = 0;
-        int bit;
-        while ((bit = input.readBit()) == 0) {
-            c++;
-        }
-        if (bit == -1) {
-            return -1;
-        }
-        StringBuilder bin = new StringBuilder("1");
-        for (int i = 0; i < c; i++) {
-            bit = input.readBit();
+        // Read code with fixed width (variable-width coding)
+        int value = 0;
+        for (int i = 0; i < codeWidth; i++) {
+            int bit = input.readBit();
             if (bit == -1) {
-                throw new EOFException();
+                return -1;
             }
-            bin.append(bit);
+            value = (value << 1) | bit;
         }
-        return (int) Long.parseLong(bin.toString(), 2) - 1;
+        return value;
     }
 
     private boolean isByte(int value) {
